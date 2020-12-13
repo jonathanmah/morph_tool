@@ -1,0 +1,27 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>NGVS Map</title>
+  </head>
+  <body>
+	  <!--	  <a href="https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/files/vault/ngvs/data/NGVS/galaxies/NGVSJ12:04:51.83+26:59:33.1/NGVSJ12:04:51.83+26:59:33.1_G.fits">Image Link</a></br> -->
+    <script type="text/javascript">
+      async function retrieveImage() {
+      var elem = document.getElementById("myButton1");
+      elem.value = "Getting results";
+      const endpoint = 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/files/vault/ngvs/data/NGVS/galaxies/NGVSJ12:04:51.83+26:59:33.1/NGVSJ12:04:51.83+26:59:33.1_G.fits'
+      fetch(endpoint, {
+      method: 'GET',
+	      credentials: 'include'
+      }).then(response => console.log(response.ok))
+		      .catch(error => { alert(error); return} )
+      }
+    </script>
+    <form>
+      <input type="button" onclick="retrieveImage()" id="myButton1" value="Fetch"></input>
+    </form>
+  </body>
+</html>

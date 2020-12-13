@@ -1,0 +1,47 @@
+{
+  "name": "js9",
+  "version": "3.1.0",
+  "description": "astronomical image display everywhere",
+  "main": "js9.js",
+  "scripts": {
+    "start": "http-server -c-1",
+    "test": "build/quicktest build/i800400.fits.gz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ericmandel/js9.git"
+  },
+  "keywords": [
+    "astronomy",
+    "software",
+    "image display"
+  ],
+  "author": "Eric Mandel <eric@cfa.harvard.edu> (https://js9.si.edu)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ericmandel/js9/issues"
+  },
+  "proxy": "http://localhost:8085",
+  "homepage": "https://js9.si.edu",
+  "bundledDependencies": [
+    "connected-domain",
+    "minimist",
+    "open",
+    "ps-node",
+    "rimraf",
+    "socket.io",
+    "table-parser",
+    "uuid"
+  ],
+  "dependencies": {
+    "http-server": "^0.12.3",
+    "minimist": "^1.2.5",
+    "mysql": "^2.18.1",
+    "open": "^7.2.1",
+    "ps-node": "^0.1.0",
+    "requirejs": "^2.3.6",
+    "rimraf": "^1.0.0",
+    "socket.io": "^2.1.1",
+    "uuid": "^3.4.0"
+  }
+}

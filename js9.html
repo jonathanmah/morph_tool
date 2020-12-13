@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheeNGVSJ12:29:53.91+10:20:17.0t" href="js9.css">
+  <link rel="apple-touch-icon" href="images/js9-apple-touch-icon.png">
+  <link href="https://fonts.googleapis.com/css?family=Archivo:500|Open+Sans:300,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <!-- Popper JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js9prefs.js"></script>
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <link rel="stylesheet" href="main.css">
+  <title>Morph Tool</title>
+</head>
+<body>
+    <h4 class="page_title" style="font-family:Arial">NGVS Galaxy Morphological Tool - </h4>
+    <h4 class="galaxy_name" style="font-family:Arial"></h4>
+
+    <!-- This block of javascript queries -->
+    <script type="text/javascript">
+      $(document).ready(function(){
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString); 
+        const galaxy = urlParams.get('galaxy')
+        checkboxListen();
+
+        if(galaxy==null){
+          $(".galaxy_name").html('select a galaxy');
+          $("#properties-title").hide();
+          $("#properties").hide();
+        }else{
+          query()
+        }
+      });
+
+      function checkboxListen(){
+
+        var morphStr = "";
+        var morphSubStr = "";
+        var starStr = "";
+        var starSubStr = "";
+        var resStr = "";
+
+        $(document).ready(function(){
+
+          // two of these
+          function checkRadio1(){
+            var radioarr = []
+            $(":radio[name=radiobox1]").each(function(){
+              if($(this).prop("checked")){
+                radioarr.push($(this).val())
+              }
+            });
+            radiovals = radioarr.join("|");
+            morphStr = radiovals;
+            resStr = morphStr + morphSubStr + "-" + starStr + starSubStr;
+            $("#class_code").val(resStr);
+          }
+
+          function checkRadio2(){
+            var radioarr = []
+            $(":radio[name=radiobox2]").each(function(){
+              if($(this).prop("checked")){
+                radioarr.push($(this).val())
+              }
+            });
+            radiovals = radioarr.join("|");
+            starStr = radiovals;
+            resStr = morphStr + morphSubStr + "-" + starStr + starSubStr;
+            $("#class_code").val(resStr);
+          }
+          
+          function getActive(){
+            setTimeout(function() { checkRadio1(); }, 200);
+            setTimeout(function() { checkRadio2(); }, 200);
+          }
+
+          //two of these
+          document.querySelectorAll("label[name=radio1]").forEach( input => input.addEventListener('click', getActive));
+          document.querySelectorAll("label[name=radio2]").forEach( input => input.addEventListener('click', getActive));
+
+          // two of these
+          $("input[type=checkbox][name=options1]").on("change", function(){
+            var checkarr = []
+            $(":checkbox[name=options1]").each(function(){
+              if($(this).is(":checked")){
+                checkarr.push($(this).val())
+              }
+            });
+            checkvals = checkarr.join("|");
+            if(checkarr.length >= 1){
+              morphSubStr = "(" + checkvals + ")"
+            }else{
+              morphSubStr = ""
+            }
+            resStr = morphStr + morphSubStr + "-" + starStr + starSubStr;
+            $("#class_code").val(resStr);
+          });
+
+          $("input[type=checkbox][name=options2]").on("change", function(){
+            var checkarr = []
+            $(":checkbox[name=options2]").each(function(){
+              if($(this).is(":checked")){
+                checkarr.push($(this).val())
+              }
+            });
+            checkvals = checkarr.join("|");
+            if(checkarr.length >= 1){
+              starSubStr = "(" + checkvals + ")"
+            }else{
+              starSubStr = ""
+            }
+            resStr = morphStr + morphSubStr + "-" + starStr + starSubStr;
+            $("#class_code").val(resStr);
+          });
+
+        });
+      }
+
+      async function query(){
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString); 
+        const galaxy = urlParams.get('galaxy')
+        let query;
+        let queryUri;
+        let reponse;
+        let csvText;
+
+        if(galaxy[0] != 'N'){
+          query = `SELECT Official_name, VCC_name, VCC_Bmag, principleRA, principleDEC, z_spec, g_mag_bestfit, `
+        + `g_Ie_bestfit, g_re_bestfit, g_avmure_bestfit from cfht.ngvsCatalog WHERE VCC_name='${galaxy}'`
+          queryURI = 'https://ws-cadc.canfar.net/youcat/sync?LANG=ADQL&FORMAT=csv&QUERY=' + encodeURIComponent(query);
+          response = await fetch(queryURI, {credentials: 'include'});
+          csvText = await response.text();
+          if(csvText.length <= 121){
+            alert("Error: invalid galaxy");
+            $(".galaxy_name").html('select a galaxy');
+            return 0;
+          }
+
+        }else{
+          query = `SELECT Official_name, VCC_name, VCC_Bmag, principleRA, principleDEC, z_spec, g_mag_bestfit, `
+        + `g_Ie_bestfit, g_re_bestfit, g_avmure_bestfit from cfht.ngvsCatalog WHERE Official_name='${galaxy}'`
+          queryURI = 'https://ws-cadc.canfar.net/youcat/sync?LANG=ADQL&FORMAT=csv&QUERY=' + encodeURIComponent(query);
+          response = await fetch(queryURI, {credentials: 'include'});
+          csvText = await response.text();
+          if(csvText.length <= 121){
+            alert("Error: invalid galaxy");
+            $(".galaxy_name").html('select a galaxy');
+            return 0;
+          }
+        }
+
+          var res = csvText.slice(121);
+          arr = res.split(",");
+          var data = ["Official_name", "VCC_name", "VCC_Bmag", "principleRA", "principleDEC", "z_spec", "g_mag_bestfit", "g_Ie_bestfit", "g_re_bestfit", "g_avmure_bestfit"];
+
+          // split res and set html text accordingly
+            $("#Official_name").html("<b>Official_name:</b> "+ arr[0]);
+          for (i = 1; i < arr.length; i++) {  
+            var decimalArr = arr[i].split(".")[1];
+            var num = parseFloat(arr[i]);
+            if(decimalArr.length >= 7){
+              var roundTo = 7;
+              for (var j = 6; j >= 1; j--) {
+                if(decimalArr[j] == '0'){
+                  roundTo = roundTo - 1;
+                }else {
+                  break;
+                }
+              }
+              var round = num.toFixed(roundTo);
+            }
+            else{
+              var round = num.toString();
+            } 
+            str = "#" + data[i];
+            $(str).html("<b>" + data[i] + ":</b> " + round);
+          }
+
+          $(".galaxy_name").html(arr[0]);
+          $("#properties-title").show();
+          $("#properties").show();
+      }
+
+    </script>
+
+    <div class="classification_section" id="morphology_section">
+      <div class="classification_option">
+        <h5>Morphology (select one)</h5>
+        <form>
+          <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-success" name="radio1">
+                <input type="radio" name="radiobox1" id="Elliptical" value="E"> Elliptical
+              </label>
+              <label class="btn btn-success" name="radio1">
+                <input type="radio" name="radiobox1" id="Spiral" value="S"> Spiral
+              </label>
+              <label class="btn btn-success" name="radio1">
+                <input type="radio" name="radiobox1" id="Irregular" value="I"> Irregular
+              </label>
+              <label class="btn btn-success" name="radio1">
+                <input type="radio" name="radiobox1" id="ES-Transition" value="ES"> ES Transition
+              </label>
+              <label class="btn btn-success" name="radio1">
+                <input type="radio" name="radiobox1" id="SI-Transition" value="SI"> SI Transition
+              </label>
+              <label class="btn btn-success" name="radio1">
+                <input type="radio" name="radiobox1" id="EI-Transition" value="EI"> EI Transition
+              </label>
+          </div>
+        </form>
+      </div>
+      <div class="classification_option">
+        <h5>Substructure (select all that apply)</h5>
+        <form>
+          <div class="btn-group" data-toggle="buttons">
+            <label class="btn btn-success">
+              <input type="checkbox" name="options1" id="Disk" value="di"> Disk
+            </label>
+            <label class="btn btn-success">
+              <input type="checkbox" name="options1" id="Bar" value="b"> Bar
+            </label>
+            <label class="btn btn-success">
+              <input type="checkbox" name="options1" id="Spiral-Arms" value="sp"> Spiral Arms
+            </label>
+            <label class="btn btn-success">
+              <input type="checkbox" name="options1" id="Shells" value="sh"> Shells
+            </label>
+            <label class="btn btn-success">
+              <input type="checkbox" name="options1" id="Streams" value="st"> Streams
+            </label>
+            <label class="btn btn-success">
+              <input type="checkbox" name="options1" id="Dust" value="du"> Dust
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="classification_option">
+        <h5>Star Formation (select one)</h5>
+        <form>
+          <div class="btn-group" data-toggle="buttons">
+            <label class="btn btn-success" name="radio2">
+              <input type="radio" name="radiobox2" id="Quiescent" value="Q"> Quiescent
+            </label>
+            <label class="btn btn-success" name="radio2">
+              <input type="radio" name="radiobox2" id="Intermediate" value="I"> Intermediate
+            </label>
+            <label class="btn btn-success" name="radio2">
+              <input type="radio" name="radiobox2" id="Active" value="A"> Active
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="classification_option">
+        <h5>Star Formation Modes (select all that apply)</h5>
+        <form>
+          <div class="btn-group" data-toggle="buttons">
+            <label class="btn btn-success">
+              <input type="checkbox" name="options2" id="Global" value="g"> Global
+            </label>
+            <label class="btn btn-success">
+              <input type="checkbox" name="options2" id="Core" value="c"> Core
+            </label>
+            <label class="btn btn-success">
+              <input type="checkbox" name="options2" id="Disk" value="d"> Disk
+            </label>
+            <label class="btn btn-success">
+              <input type="checkbox" name="options2" id="Filaments" value="f"> Filaments
+            </label>
+            <label class="btn btn-success">
+              <input type="checkbox" name="options2" id="Patchy" value="p"> Patchy
+            </label>
+            <label class="btn btn-success">
+              <input type="checkbox" name="options2" id="Extended" value="e"> Extended
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="classification_option">
+        <h5 style="font-size:0.8vw;">Classification Code</h5>
+        <input id="class_code" type="text" readonly>
+      </div>
+      <div class="classification_option">
+        <div style="padding-top:10px">
+          <h5>Notes</h5>
+          <textarea id="notes"></textarea>
+        </div>
+      </div>
+      <button class="classify_button" data-toggle="modal" data-target="#select-galaxy-modal">Select galaxy</button>
+
+      <div class="modal" id="select-galaxy-modal">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+          
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <h4 class="modal-title">Select a galaxy</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            
+            <!-- Modal body -->
+            <div class="modal-body">
+                <form class="search" action="" style="max-width:300px;">
+                  <input id="galaxy_name" type="text" placeholder="Enter galaxy name..." name="galaxy" autocomplete="off">
+                  <button type="submit"><i class="fa fa-search" onclick="printGalaxy()"></i></button>
+                </form>
+            </div>
+            
+            <!-- Modal footer -->
+            <div class="modal-footer">
+              <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      
+      <button class="classify_button">View classified galaxies</button>
+      <button class="submit_button">Submit</button>
+    </div>
+
+    <div class="display_options" style="width:11%;">
+      <div class="card bg-light text-dark">
+        <div class="card-header">Display Options</div>
+        <div class="card-body">
+          <label class="display-label" for="scaling-algorithm-select">Scale: </label>
+          <select id="scaling-algorithm-select" onChange="changeScaling(this)">
+            <option value="linear" selected>linear</option>
+            <option value="log">log</option>
+            <option value="histeq">histeq</option>
+            <option value="power">power</option>
+            <option value="sqrt">sqrt</option>
+            <option value="squared">squared</option>
+            <option value="asinh">asinh</option>
+            <option value="sinh">sinh</option>
+          </select>
+          <script type="text/javascript">
+            function changeScaling(selectScalingObject) {
+              var scaleValue = selectScalingObject.value;  
+              JS9.SetScale(scaleValue, {display: "gband_panel_JS9"});
+              JS9.SetScale(scaleValue, {display: "ugi_panel_JS9"})
+              JS9.SetScale(scaleValue, {display: "smoothed_panel_JS9"})
+              JS9.SetScale(scaleValue, {display: "residual_panel_JS9"})
+            }          
+          </script>
+          <label class="display-label" for="colourmap-select" >Colourmap: </label>
+          <select id="colourmap-select" onChange="changeColourmap(this)">
+            <option value="grey" selected>grey</option>
+            <option value="heat">heat</option>
+            <option value="cool">cool</option>
+            <option value="turbo">turbo</option>
+            <option value="viridis">viridis</option>
+            <option value="magma">magma</option>
+            <option value="sls">sls</option>
+            <option value="red">red</option>
+            <option value="green">green</option>
+            <option value="blue">blue</option>
+          </select>
+          <script type="text/javascript">
+            function changeColourmap(selectColourObject) {
+              var colourValue = selectColourObject.value;
+              JS9.SetColormap(colourValue, {display: "gband_panel_JS9"})
+              JS9.SetColormap(colourValue, {display: "ugi_panel_JS9"})
+              JS9.SetColormap(colourValue, {display: "smoothed_panel_JS9"})
+              JS9.SetColormap(colourValue, {display: "residual_panel_JS9"})
+            }          
+          </script>
+
+          <label class="display-label" for="gband-select">Image filter: </label>
+          <select id="gband-select" onChange="gbandSwitch(this.value)">
+            <option value="u" selected>u</option>
+            <option value="g">g</option>
+            <option value="i">i</option>
+            <option value="z">z</option>
+          </select>
+
+          <label class="display-label" for="residual-select">Residual filter: </label>
+          <select id="residual-select" onChange="residualSwitch(this.value)">
+            <option value="u" selected>u</option>
+            <option value="g">g</option>
+            <option value="i">i</option>
+            <option value="z">z</option>
+          </select>
+
+          <label class="display-label" for="unsharp-masking-select">Unsharp masking fits: </label>
+          <select id="unsharp-masking-select" onChange="unsharpmaskingSwitch(this.value)">
+            <option value="Circular Smoothed" selected>Circular Smoothed</option>
+            <option value="Circular Full resolution">Circular Full resolution</option>
+            <option value="Elliptical Smoothed">Ellptical Smoothed</option>
+            <option value="Elliptical Full resolution">Elliptical Full resolution</option>
+          </select>
+
+          <script type="text/javascript">
+
+            function gbandSwitch(selectedValue){
+              console.log(selectedValue)
+            }
+            
+            function residualSwitch(selectedValue){
+              console.log(selectedValue)
+            }
+
+            function unsharpmaskingSwitch(selectedValue){
+              console.log(selectedValue)
+            }
+          </script>
+
+          <button onclick="testInsert()">testInsert</button>
+          <button onclick="testRetrieve()">testRetrieve</button>
+          <form action="./helloworld.php" method="post">
+            <button type="submit">Submit</button>
+          </form>
+          
+
+
+          <!-- <form name="search" action="/cgi-bin/test.py" method="get">
+            Search: <input type="text" name="searchbox">
+            <input type="submit" value="Submit">
+            </form>  -->
+          
+          <script type="text/javascript">
+            // async function retrieveImage() {
+            //   document.cookie = "SameSite=None; Secure; HttpOnly;"
+            //   var endpoint = 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/files/vault/ngvs/data/NGVS/galaxies/NGVSJ12:04:51.83+26:59:33.1/NGVSJ12:04:51.83+26:59:33.1_G.fits'
+            //   //var endpoint = 'https://ws-uv.canfar.net/transfer/bmVpZ2g9VVZJQyZzaWdleHA9MjAyMDExMjQyMTMxNTgmYXJjPVZPU3BhYyZpZD0yNmYwOGQzYS0zOTNhLTQ0OGUtOTA1OC0xY2Y5NmRiMiZ1c2VyPWpvbmF0aGFubWFoJm5zPW5ndnMlMkZkYXRhJTJGTkdWUyUyRmdhbGF4aWVzJTJGTkdWU0oxMiUzQTA0JTNBNTEuODMlMkIyNiUzQTU5JTNBMzMuMSZtZXRoPWdldCZhdXRoQ29kZT0wJnJ1bklEPWQwbHYyMWo5cGd1NTZmcmomdXJsPWh0dHAlM0ElMkYlMkZzdG9yLXV2LTAzLmNhbmZhci5uZXQlM0E4ODg4JTJGYXJjaGl2ZSUyRjg4MGRlOTQyJTJGMTU3OCUyRnZvc3BhYyUyRmRlZmF1bHQlMkYwMCUyRjIyJTJGNDAlMkYyNmYwOGQzYSUyNTJEMzkzYSUyNTJENDQ4ZSUyNTJEOTA1OCUyNTJEMWNmOTZkYjIlMjUzQiUyNTNCMzA1NjY5OTc5-ZmlkPU5HVlNKMTIlM0EwNCUzQTUxLjgzJTJCMjYlM0E1OSUzQTMzLjFfRy5maXRzJmNsbj01NzY1NzYwJmNtZD02Mjk4ODJhNjI3NWFjMDFmMmVmM2UwM2YwN2U4MTE2ZiZsbWQ9MTYwNDQwMTQ1MDA2MA==-acb1a4bd442b3b0b9dd442b130f0a433/NGVSJ12:04:51.83+26:59:33.1_G.fits'
+            //   const queryResult = await fetch(endpoint, {
+            //    // mode: 'cors'
+            //   ///  credentials: 'include'
+            //   })
+            // }
+            // function retrieveImage(){
+            //   $.get("https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/files/vault/ngvs/data/NGVS/galaxies/NGVSJ12:04:51.83+26:59:33.1/NGVSJ12:04:51.83+26:59:33.1_G.fits", function(data, status){
+            //   alert("Data: " + data + "\nStatus: " + status);
+            //   });
+            // }
+            async function testRetrieve(){
+              var proxy = '206.12.92.202:8088'
+              //var endpoint = 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/files/vault/ngvs/data/NGVS/galaxies/NGVSJ12:04:51.83+26:59:33.1/NGVSJ12:04:51.83+26:59:33.1_G.fits'
+              var endpoint ='/?galaxy=NGVSJ12:04:51.83+26:59:33.1&file=NGVSJ12:04:51.83+26:59:33.1_G.fits'
+              const queryResult = await fetch(proxy+endpoint, {
+               mode: 'cors',
+              credentials: 'include'
+              });
+            }
+            
+
+            async function testInsert(){
+              const queryString = window.location.search;
+              const urlParams = new URLSearchParams(queryString); 
+              const galaxy = urlParams.get('galaxy')
+              // let query = `SELECT Official_name, principleRA, principleDec from cfht.ngvsCatalog WHERE Official_name='${galaxy}'`
+              // let query = "INSERT INTO cfht.ngvsMorph VALUES (1.0)";
+              
+              // var csv = "Official_name,Morph_class,Morph_user\ntest1,test2,2.0";
+              // var hiddenElement = document.createElement('form');
+              // hiddenElement.id = "newFile"
+              // hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+              // formElement = document.querySelector('a');
+              
+              var CSV = [
+                  'Official_name,Morph_class,Morph_user',
+                  'test1,test2,2.0'
+                ].join('\n');
+
+              var contentType = 'text/csv';
+
+              var csvFile = new Blob([CSV], {type: contentType});
+
+              var formData = new FormData();
+              formData.append('row', csvFile, 'row.csv');
+
+              let queryURI = 'https://ws-cadc.canfar.net/youcat/auth-load/cfht.ngvsMorph'
+              let response = await fetch(queryURI, {
+                method: "POST",
+                body: formData,
+                credentials: 'include'});
+              let csvText = await response.text();
+              console.log(csvText)
+              console.log(csvText)
+            }
+
+
+
+            // function makeBaseAuth(user, pswd) { 
+            //   var token = user + ':' + pswd;
+            //   var hash = "";
+            //   if (btoa) {
+            //     hash = btoa(token);
+            //   }
+            //   return "Basic " + hash;
+            // }
+          </script> 
+
+        </div>
+      </div>
+    </div>
+
+    <div id="panels">
+    
+      <div id="zoom_button" class="btn-group-vertical" role="group" >
+        <button class="btn btn-dark" onclick="zoomIn()">+</button>
+        <button class="btn btn-dark" onclick="zoomOut()">-</button>
+      </div>
+      
+      <div id="ugi_panel" class="rounded-lg">
+        <h6 class="panel_label" style="font-family:Archivo">U,g,i colour JPEG</h6>  
+        <div class="JS9" id="ugi_panel_JS9"></div>
+      </div>
+      <script type="text/javascript">
+        $(document).ready(function(){
+          JS9.globalOpts.mouseActions= ["display value/position", "pan the image", "change contrast/bias"]
+          JS9.Load("images/VCC1661_giz_large.jpg", {rgbFile: "images/VCC1661_giz_large.jpg"}, {display: "ugi_panel_JS9"});
+          initialDisplaySize();
+        });
+      </script>
+      
+      <div id="gband_panel" class="rounded-lg">
+        <h6 class="panel_label" style="font-family:Archivo">Original fits image</h6>
+        <div class="JS9" id="gband_panel_JS9"></div>
+      </div>
+      <script type="text/javascript">
+        $(document).ready(function(){
+          JS9.Load("images/NGVS189.10327+10.384669_VCC1661_G.fits", {scale: "linear", onload: function(){ synchronize(); JS9.SetScale("zscale", {display: "gband_panel_JS9"});}}, {display: "gband_panel_JS9"});
+          initialDisplaySize();
+        });
+      </script>
+     
+      <div id="residual_panel" class="rounded-lg">
+        <h6 class="panel_label" style="font-family:Archivo">Residual fits image</h6>
+        <div class="JS9" id="residual_panel_JS9"></div>
+      </div>
+      <script type="text/javascript">
+        $(document).ready(function(){
+          JS9.Load("images/NGVS189.10327+10.384669_VCC1661_G_res.fits", {scale: "linear", onload: function(){synchronize(); JS9.SetScale("zscale", {display: "residual_panel_JS9"});}}, {display: "residual_panel_JS9"});
+          initialDisplaySize();
+        });
+      </script>
+
+      <div id="smoothed_panel" class="rounded-lg">
+        <h6 class="panel_label" style="font-family:Archivo">Unsharp mask fits image</h6>
+        <div class="JS9" id="smoothed_panel_JS9"></div>
+      </div>
+      <script type="text/javascript">
+        $(document).ready(function(){
+          JS9.Load("images/VCC1661_unsharp_b_o_e0.97_p169.4.fits", {scale: "linear", onload: function(){synchronize(); JS9.SetScale("zscale", {display: "smoothed_panel_JS9"});}}, {display: "smoothed_panel_JS9"});
+          initialDisplaySize();
+
+          console.log("Available Height: " + window.innerHeight);
+          console.log("Available Width: " + window.innerWidth);    
+          console.log("jqery" + $(window).width());
+
+        });
+      </script>
+
+      <script type="text/javascript">
+
+          function resize(width, height) {
+            JS9.ResizeDisplay("ugi_panel_JS9", width, height);
+            JS9.ResizeDisplay("gband_panel_JS9", width, height);
+            JS9.ResizeDisplay("residual_panel_JS9", width, height);
+            JS9.ResizeDisplay("smoothed_panel_JS9", width, height);
+          }
+
+          function initialDisplaySize() {
+            if ($(window).width() >= 1920) {
+            resize(450,391)
+            } else if($(window).width() >= 1600 && $(window).width() < 1920) {
+              resize(400,348)
+            } else if ($(window).width() >= 1420 && $(window).width() < 1600) { 
+            resize(350,304)
+            } else if($(window).width() >= 1200 && $(window).width() < 1420) {
+            resize(300,261)
+            }
+          }
+          
+          function resize1200(match1200) {
+            if (match1200.matches) { // If media query matches
+              resize(300,261)
+            }
+          }
+        
+          function resize1420(match1420) { // this is perfect
+            if (match1420.matches) { // If media query matches
+              resize(350,304)
+            }
+          }
+
+          function resize1600(match1600) { // this is perfect
+            if (match1600.matches) { // If media query matches
+              resize(400,348)
+            }
+          }
+
+          function resize1920(match1920) {
+            if (match1920.matches) { // If media query matches
+              resize(450,391)
+            }
+          }
+          
+          var match1200 = window.matchMedia("(min-width: 1200px) and (max-width: 1419.98px)")
+          match1200.addListener(resize1200) // Attach listener function on state changes
+
+          var match1420 = window.matchMedia("(min-width: 1420px) and (max-width: 1599.98px)")
+          match1420.addListener(resize1420) // Attach listener function on state changes
+
+          var match1600 = window.matchMedia("(min-width: 1600px) and (max-width: 1919.98px)")
+          match1600.addListener(resize1600) // Attach listener function on state changes
+
+          var match1920 = window.matchMedia("(min-width: 1920px)")
+          match1920.addListener(resize1920)
+
+      </script>
+    </div>
+
+    <h5 id="properties-title">Measured Properties</h5>
+    <div id="properties">
+      <div id="first-table">
+        <table class="table">
+          <tr>
+            <td id="Official_name" class="property-text"><b>Official_name: </b>NGVSJ12:29:53.91+10:20:17.0</td>
+            <td id="VCC_name" class="property-text"><b>VCC_name: </b>1238</td>
+          </tr>
+        </table>
+      </div>
+      <div id="second-table">
+        <table class="table">
+          <tr>
+            <td id="VCC_Bmag" class="property-text"><b>VCC_Bmag: </b>15.7</td>
+            <td id="principleRA" class="property-text"><b>NGVS_ra_deg: </b>187.4746316</td>
+            <td id="principleDEC" class="property-text"><b>NGVS_dec_deg: </b>10.3380421</td>
+            <td id="z_spec" class="property-text"><b>z_spec: </b>0.002176</td>
+          </tr>
+          <tr>
+            <td id="g_mag_bestfit" class="property-text"><b>g_mag_bestfit: </b>15.28</td>
+            <td id="g_Ie_bestfit" class="property-text"><b>g_Ie_bestfit: </b>24.17</td>
+            <td id="g_re_bestfit" class="property-text"><b>g_re_bestfit: </b>16.66</td>
+            <td id="g_avmure_bestfit" class="property-text"><b>g_avmure_bestfit: </b>23.38</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+
+      function synchronize() {
+        JS9.SyncImages(["pan"], ["NGVS189.10327+10.384669_VCC1661_G.fits", "VCC1661_unsharp_b_o_e0.97_p169.4.fits", "NGVS189.10327+10.384669_VCC1661_G_res.fits"], {display: "gband_panel_JS9"})
+      }
+
+      function zoomIn(){
+        JS9.SetZoom("x2", {display: "gband_panel_JS9"});
+        JS9.SetZoom("x2", {display: "ugi_panel_JS9"});
+        JS9.SetZoom("x2", {display: "residual_panel_JS9"});
+        JS9.SetZoom("x2", {display: "smoothed_panel_JS9"});
+      }
+      function zoomOut(){
+        JS9.SetZoom("/2", {display: "gband_panel_JS9"});
+        JS9.SetZoom("/2", {display: "ugi_panel_JS9"});
+        JS9.SetZoom("/2", {display: "residual_panel_JS9"});
+        JS9.SetZoom("/2", {display: "smoothed_panel_JS9"});
+      }
+    </script>
+    
+<p>
+</body>
+</html>
