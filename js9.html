@@ -32,7 +32,7 @@
     <h4 class="page_title" style="font-family:Arial">NGVS Galaxy Morphological Tool - </h4>
     <h4 class="galaxy_name" style="font-family:Arial"></h4>
 
-    <!-- This block of javascript queries -->
+    <!-- This block of javascript creates the classification code, queries for a searched galaxy, and retrieves a valid galaxy's measured properties  -->
     <script type="text/javascript">
       $(document).ready(function(){
         const queryString = window.location.search;
@@ -49,6 +49,7 @@
         }
       });
 
+      // create classification code from buttons selected
       function checkboxListen(){
 
         var morphStr = "";
@@ -59,7 +60,7 @@
 
         $(document).ready(function(){
 
-          // two of these
+          // checkRadio1 is for morphology selection
           function checkRadio1(){
             var radioarr = []
             $(":radio[name=radiobox1]").each(function(){
@@ -73,6 +74,7 @@
             $("#class_code").val(resStr);
           }
 
+          // checkRadio2 is for star formation selection
           function checkRadio2(){
             var radioarr = []
             $(":radio[name=radiobox2]").each(function(){
@@ -91,11 +93,11 @@
             setTimeout(function() { checkRadio2(); }, 200);
           }
 
-          //two of these
+          // add event listeners to update classification when new radio button is selected
           document.querySelectorAll("label[name=radio1]").forEach( input => input.addEventListener('click', getActive));
           document.querySelectorAll("label[name=radio2]").forEach( input => input.addEventListener('click', getActive));
 
-          // two of these
+          // update classification code for Substructure
           $("input[type=checkbox][name=options1]").on("change", function(){
             var checkarr = []
             $(":checkbox[name=options1]").each(function(){
@@ -113,6 +115,7 @@
             $("#class_code").val(resStr);
           });
 
+          // update classification code for Star Formation Modes
           $("input[type=checkbox][name=options2]").on("change", function(){
             var checkarr = []
             $(":checkbox[name=options2]").each(function(){
@@ -133,6 +136,7 @@
         });
       }
 
+      // query for a searched galaxy, and retrieve a valid galaxy's measured properties
       async function query(){
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString); 
@@ -142,6 +146,7 @@
         let reponse;
         let csvText;
 
+        // search by VCC name 
         if(galaxy[0] != 'N'){
           query = `SELECT Official_name, VCC_name, VCC_Bmag, principleRA, principleDEC, z_spec, g_mag_bestfit, `
         + `g_Ie_bestfit, g_re_bestfit, g_avmure_bestfit from cfht.ngvsCatalog WHERE VCC_name='${galaxy}'`
@@ -155,6 +160,8 @@
           }
 
         }else{
+
+          // search by Original Name
           query = `SELECT Official_name, VCC_name, VCC_Bmag, principleRA, principleDEC, z_spec, g_mag_bestfit, `
         + `g_Ie_bestfit, g_re_bestfit, g_avmure_bestfit from cfht.ngvsCatalog WHERE Official_name='${galaxy}'`
           queryURI = 'https://ws-cadc.canfar.net/youcat/sync?LANG=ADQL&FORMAT=csv&QUERY=' + encodeURIComponent(query);
@@ -171,8 +178,8 @@
           arr = res.split(",");
           var data = ["Official_name", "VCC_name", "VCC_Bmag", "principleRA", "principleDEC", "z_spec", "g_mag_bestfit", "g_Ie_bestfit", "g_re_bestfit", "g_avmure_bestfit"];
 
-          // split res and set html text accordingly
-            $("#Official_name").html("<b>Official_name:</b> "+ arr[0]);
+          // update list of measured properties
+          $("#Official_name").html("<b>Official_name:</b> "+ arr[0]);
           for (i = 1; i < arr.length; i++) {  
             var decimalArr = arr[i].split(".")[1];
             var num = parseFloat(arr[i]);
@@ -424,32 +431,11 @@
 
           <button onclick="testInsert()">testInsert</button>
           <button onclick="testRetrieve()">testRetrieve</button>
-          <form action="./helloworld.php" method="post">
-            <button type="submit">Submit</button>
-          </form>
-          
 
-
-          <!-- <form name="search" action="/cgi-bin/test.py" method="get">
-            Search: <input type="text" name="searchbox">
-            <input type="submit" value="Submit">
-            </form>  -->
           
           <script type="text/javascript">
-            // async function retrieveImage() {
-            //   document.cookie = "SameSite=None; Secure; HttpOnly;"
-            //   var endpoint = 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/files/vault/ngvs/data/NGVS/galaxies/NGVSJ12:04:51.83+26:59:33.1/NGVSJ12:04:51.83+26:59:33.1_G.fits'
-            //   //var endpoint = 'https://ws-uv.canfar.net/transfer/bmVpZ2g9VVZJQyZzaWdleHA9MjAyMDExMjQyMTMxNTgmYXJjPVZPU3BhYyZpZD0yNmYwOGQzYS0zOTNhLTQ0OGUtOTA1OC0xY2Y5NmRiMiZ1c2VyPWpvbmF0aGFubWFoJm5zPW5ndnMlMkZkYXRhJTJGTkdWUyUyRmdhbGF4aWVzJTJGTkdWU0oxMiUzQTA0JTNBNTEuODMlMkIyNiUzQTU5JTNBMzMuMSZtZXRoPWdldCZhdXRoQ29kZT0wJnJ1bklEPWQwbHYyMWo5cGd1NTZmcmomdXJsPWh0dHAlM0ElMkYlMkZzdG9yLXV2LTAzLmNhbmZhci5uZXQlM0E4ODg4JTJGYXJjaGl2ZSUyRjg4MGRlOTQyJTJGMTU3OCUyRnZvc3BhYyUyRmRlZmF1bHQlMkYwMCUyRjIyJTJGNDAlMkYyNmYwOGQzYSUyNTJEMzkzYSUyNTJENDQ4ZSUyNTJEOTA1OCUyNTJEMWNmOTZkYjIlMjUzQiUyNTNCMzA1NjY5OTc5-ZmlkPU5HVlNKMTIlM0EwNCUzQTUxLjgzJTJCMjYlM0E1OSUzQTMzLjFfRy5maXRzJmNsbj01NzY1NzYwJmNtZD02Mjk4ODJhNjI3NWFjMDFmMmVmM2UwM2YwN2U4MTE2ZiZsbWQ9MTYwNDQwMTQ1MDA2MA==-acb1a4bd442b3b0b9dd442b130f0a433/NGVSJ12:04:51.83+26:59:33.1_G.fits'
-            //   const queryResult = await fetch(endpoint, {
-            //    // mode: 'cors'
-            //   ///  credentials: 'include'
-            //   })
-            // }
-            // function retrieveImage(){
-            //   $.get("https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/files/vault/ngvs/data/NGVS/galaxies/NGVSJ12:04:51.83+26:59:33.1/NGVSJ12:04:51.83+26:59:33.1_G.fits", function(data, status){
-            //   alert("Data: " + data + "\nStatus: " + status);
-            //   });
-            // }
+          
+            // attempt to retrieve VOSpace images through node proxy server
             async function testRetrieve(){
               var proxy = '206.12.92.202:8088'
               //var endpoint = 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/files/vault/ngvs/data/NGVS/galaxies/NGVSJ12:04:51.83+26:59:33.1/NGVSJ12:04:51.83+26:59:33.1_G.fits'
@@ -460,20 +446,12 @@
               });
             }
             
-
+            // attempt to insert classification code into cfht.ngvsMorph datatable
             async function testInsert(){
               const queryString = window.location.search;
               const urlParams = new URLSearchParams(queryString); 
               const galaxy = urlParams.get('galaxy')
-              // let query = `SELECT Official_name, principleRA, principleDec from cfht.ngvsCatalog WHERE Official_name='${galaxy}'`
-              // let query = "INSERT INTO cfht.ngvsMorph VALUES (1.0)";
-              
-              // var csv = "Official_name,Morph_class,Morph_user\ntest1,test2,2.0";
-              // var hiddenElement = document.createElement('form');
-              // hiddenElement.id = "newFile"
-              // hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-              // formElement = document.querySelector('a');
-              
+
               var CSV = [
                   'Official_name,Morph_class,Morph_user',
                   'test1,test2,2.0'
@@ -495,17 +473,6 @@
               console.log(csvText)
               console.log(csvText)
             }
-
-
-
-            // function makeBaseAuth(user, pswd) { 
-            //   var token = user + ':' + pswd;
-            //   var hash = "";
-            //   if (btoa) {
-            //     hash = btoa(token);
-            //   }
-            //   return "Basic " + hash;
-            // }
           </script> 
 
         </div>
@@ -569,6 +536,7 @@
         });
       </script>
 
+      <!-- This block of javascript resizes the JS9 display panels based on a users window size/resolution  -->
       <script type="text/javascript">
 
           function resize(width, height) {
@@ -591,37 +559,37 @@
           }
           
           function resize1200(match1200) {
-            if (match1200.matches) { // If media query matches
+            if (match1200.matches) {
               resize(300,261)
             }
           }
         
-          function resize1420(match1420) { // this is perfect
-            if (match1420.matches) { // If media query matches
+          function resize1420(match1420) {
+            if (match1420.matches) {
               resize(350,304)
             }
           }
 
-          function resize1600(match1600) { // this is perfect
-            if (match1600.matches) { // If media query matches
+          function resize1600(match1600) {
+            if (match1600.matches) {
               resize(400,348)
             }
           }
 
           function resize1920(match1920) {
-            if (match1920.matches) { // If media query matches
+            if (match1920.matches) {
               resize(450,391)
             }
           }
           
           var match1200 = window.matchMedia("(min-width: 1200px) and (max-width: 1419.98px)")
-          match1200.addListener(resize1200) // Attach listener function on state changes
+          match1200.addListener(resize1200)
 
           var match1420 = window.matchMedia("(min-width: 1420px) and (max-width: 1599.98px)")
-          match1420.addListener(resize1420) // Attach listener function on state changes
+          match1420.addListener(resize1420)
 
           var match1600 = window.matchMedia("(min-width: 1600px) and (max-width: 1919.98px)")
-          match1600.addListener(resize1600) // Attach listener function on state changes
+          match1600.addListener(resize1600)
 
           var match1920 = window.matchMedia("(min-width: 1920px)")
           match1920.addListener(resize1920)
@@ -634,24 +602,24 @@
       <div id="first-table">
         <table class="table">
           <tr>
-            <td id="Official_name" class="property-text"><b>Official_name: </b>NGVSJ12:29:53.91+10:20:17.0</td>
-            <td id="VCC_name" class="property-text"><b>VCC_name: </b>1238</td>
+            <td id="Official_name" class="property-text"><b>Official_name: </b></td>
+            <td id="VCC_name" class="property-text"><b>VCC_name: </b></td>
           </tr>
         </table>
       </div>
       <div id="second-table">
         <table class="table">
           <tr>
-            <td id="VCC_Bmag" class="property-text"><b>VCC_Bmag: </b>15.7</td>
-            <td id="principleRA" class="property-text"><b>NGVS_ra_deg: </b>187.4746316</td>
-            <td id="principleDEC" class="property-text"><b>NGVS_dec_deg: </b>10.3380421</td>
-            <td id="z_spec" class="property-text"><b>z_spec: </b>0.002176</td>
+            <td id="VCC_Bmag" class="property-text"><b>VCC_Bmag: </b></td>
+            <td id="principleRA" class="property-text"><b>NGVS_ra_deg: </b></td>
+            <td id="principleDEC" class="property-text"><b>NGVS_dec_deg: </b></td>
+            <td id="z_spec" class="property-text"><b>z_spec: </b></td>
           </tr>
           <tr>
-            <td id="g_mag_bestfit" class="property-text"><b>g_mag_bestfit: </b>15.28</td>
-            <td id="g_Ie_bestfit" class="property-text"><b>g_Ie_bestfit: </b>24.17</td>
-            <td id="g_re_bestfit" class="property-text"><b>g_re_bestfit: </b>16.66</td>
-            <td id="g_avmure_bestfit" class="property-text"><b>g_avmure_bestfit: </b>23.38</td>
+            <td id="g_mag_bestfit" class="property-text"><b>g_mag_bestfit: </b></td>
+            <td id="g_Ie_bestfit" class="property-text"><b>g_Ie_bestfit: </b></td>
+            <td id="g_re_bestfit" class="property-text"><b>g_re_bestfit: </b></td>
+            <td id="g_avmure_bestfit" class="property-text"><b>g_avmure_bestfit: </b></td>
           </tr>
         </table>
       </div>
