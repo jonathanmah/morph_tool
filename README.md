@@ -11,7 +11,7 @@ Some more information on using JS9 can be found here: https://js9.si.edu/js9/hel
 
 ### Current Progress
 
-Currently users are able to search for a galaxy and select buttons to create a classification code. A valid galaxy that was searched for will display it's corresponding measured properties. Additionally the JS9 API has been set up which allows FITS/JPG files to be displayed in the panels.
+Currently users are able to search for a galaxy and select buttons to create a classification code. A valid galaxy that was searched for will display it's corresponding measured properties. Additionally the JS9 API has been set up which allows FITS/JPG files to be displayed in the panels. Currently a sample galaxy is being loaded into the displays from the project directory.
 
 ### TO DO
 Two issues exist currently with retrieving the galaxy images from VOSpace due to a cross origin resource sharing error. There was an attempt to bypass this error by writing a node proxy server located on the virtual machine located ~/www/voproxy/server.js but it doesn't work. If I got the GET requests working for the FITS files on VOSpace I was trying to read each reponse body into a file in a temporary directory on the VM and then load them into each JS9 display from this directory and clear the directory once a user switches galaxies or logs off.
