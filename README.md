@@ -1,5 +1,9 @@
 # morph tool
 
+<p align="center">
+  <img src="/images/webtool.png">
+</p>
+
 ### Web Server Configuration
 Configuration for the web server is located at /etc/nginx/site-enabled/ngvsmap on the VM.
 Currently hosted on port 8085.
