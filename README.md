@@ -1,5 +1,7 @@
 # morph tool
 
+Morph tool is a web application to visually classify Virgo Cluster galaxies based on their morphological appearance. 
+
 <p align="center">
   <img src="/images/webtool.png">
 </p>
